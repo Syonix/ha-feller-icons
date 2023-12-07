@@ -1,0 +1,113 @@
+#!/usr/local/bin/php
+<?php
+
+$url = 'https://online-katalog.feller.ch/bm/php/bm_artikelXML_V2.php?vp=0';
+$color = 'rgb(255, 255, 255)';
+
+// -----------------------------------
+
+$file = file_get_contents($url);
+
+$doc = new DOMDocument();
+$ok = @$doc->loadHTML($file);
+
+if (!$ok) {
+	echo "❌ Failed accessing the Beschriftungsmodul!\n";
+	return 1;
+}
+
+$xpath = new DOMXpath($doc);
+$groups = $xpath->query('//artikel_info/artikel/symbolgruppen/gruppe');
+
+$data = null;
+foreach ($groups as $group)
+	if ($group->getAttribute('art') === 'alle')
+		$data = $group->textContent;
+
+if ($data === null) {
+	echo "❌ Failed extracting symbol icons!\n";
+	return 1;
+}
+
+$result = [];
+$icons = explode(',', $data);
+foreach ($icons as $id)
+	$result[] = str_replace('Symbol_', '', $id);
+
+$added = [];
+$valid = [];
+foreach ($result as $id) {
+	if (is_file("svg/$id.svg")) {
+		$valid[] = $id;
+		continue;
+	}
+
+	$url = "https://online-katalog.feller.ch/bm/img/svg_symbole_dyn/$id.svg";
+	$svg = file_get_contents($url);
+
+	$doc = new DOMDocument();
+	$ok = @$doc->loadHTML($svg);
+
+	if (!$ok) {
+		echo "❌ Failed to download or parse icon $id\n";
+		return 1;
+	}
+
+	$iconnode = $doc->getElementsByTagName('svg')->item(0);
+	$paths = $iconnode->getElementsByTagName('path');
+
+	$result = [];
+	foreach ($paths as $path)
+		$result[] = $path->getAttribute('d');
+
+	$result = implode(' ', $result);
+	$result = str_replace("\n", ' ', $result);
+	$result = str_replace("\t", ' ', $result);
+
+	$viewBox = $iconnode->getAttribute('viewbox');
+	$viewBox = explode(' ', $viewBox);
+
+	$w = $iconnode->getAttribute('width');
+	$h = $iconnode->getAttribute('height');
+
+	if ($w === '') {
+		$w = (int)($viewBox[2]);
+		echo sprintf("⚠️ No width set for %s: Assuming width %s from viewBox\n", $id, $w);
+	}
+
+	if ($h === '') {
+		$h = (int)($viewBox[3]);
+		echo sprintf("⚠️ No height set for %s: Assuming height %s from viewBox\n", $id, $h);
+	}
+
+	if ($w < 10 || $h < 10)
+		echo sprintf("⚠️ Warning: Icon %s has very small dimensions: %s x %s\n", $id, (int)$w, (int)$h);
+
+	$clean = '<svg id="feller-' . $id . '" xmlns="http://www.w3.org/2000/svg" ' .
+		'x="0px" y="0px" width="' . $w . '" height="' . $h . '" xml:space="preserve">' .
+		'<path d="' . $result . '" style="fill: ' . $color . '"></path></svg>';
+
+	file_put_contents("./svg/$id.svg", $clean);
+	$added[] = $id;
+}
+
+echo sprintf("✅ Validated %s existing icons\n", count($valid));
+
+if ($added !== [])
+	echo sprintf("ℹ️ Added new icons: %s\n", join(', ', $added));
+
+$missing = [];
+$present = array_merge($valid, $added);
+foreach (scandir('./svg') as $file) {
+	if (in_array($file, ['.', '..']))
+		continue;
+
+	$id = str_replace('.svg', '', $file);
+	if (!in_array($id, $present))
+		$missing[] = $id;
+}
+
+if ($missing !== [])
+	echo sprintf("ℹ️ Previously present icons now missing: %s\n", join(', ', $missing));
+
+return 0;
