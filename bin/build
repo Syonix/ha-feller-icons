@@ -45,11 +45,8 @@ foreach (scandir('./svg') as $type) {
 		$node = $doc->getElementsByTagName('svg')->item(0);
 		$path = $node->getElementsByTagName('path')->item(0)->getAttribute('d');
 
-		$w = $node->getAttribute('width');
-		$h = $node->getAttribute('height');
-
-		$w = (int)str_replace('px', '', $w);
-		$h = (int)str_replace('px', '', $h);
+		$viewBox = $node->getAttribute('viewbox');
+		$viewBox = explode(' ', $viewBox);
 
 		if (isset($icons[$id]))
 			echo "⚠️ Duplicate: $id\n";
@@ -61,7 +58,8 @@ foreach (scandir('./svg') as $type) {
 			$col = 0;
 		}
 
-		$icons[$id] = [0, 0, $w, $h, $path];
+		$viewBox[] = $path;
+		$icons[$id] = $viewBox;
 	}
 
 	$readmeIcons .= "\n";
