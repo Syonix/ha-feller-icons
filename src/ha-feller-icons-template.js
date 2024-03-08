@@ -1,4 +1,7 @@
 async function getIcon(name) {
+    if (!(name in icons) && name in aliases)
+        name = aliases[name];
+
     if (!(name in icons)) {
         console.log(`Icon "${name}" not available`);
         return '';

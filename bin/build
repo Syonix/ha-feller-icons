@@ -16,6 +16,11 @@ $types = [
 	'no-group' => 'Others',
 ];
 
+$aliases = file_get_contents('./src/aliases.json');
+$aliasesLookup = [];
+foreach (json_decode($aliases) as $k => $v)
+	$aliasesLookup[$v][] = $k;
+
 $icons = [];
 $readmeIcons = "";
 foreach (scandir('./svg') as $type) {
@@ -23,8 +28,8 @@ foreach (scandir('./svg') as $type) {
 		continue;
 
 	$readmeIcons .= "\n\n### " . ($types[$type] ?? 'Unknown Type') . "\n\n" .
-		"| Icon | Number | Icon | Number | Icon | Number | Icon | Number |\n" .
-		"| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |\n";
+		"| Icon | Number | Aliases | Icon | Number | Aliases | Icon | Number | Aliases |\n" .
+		"| :--- | :---   | :---    | :--- | :---   | :---    | :--- | :---   | :---    |\n";
 
 	$col = 0;
 	foreach (scandir("./svg/$type") as $file) {
@@ -51,9 +56,12 @@ foreach (scandir('./svg') as $type) {
 		if (isset($icons[$id]))
 			echo "⚠️ Duplicate: $id\n";
 
-		$readmeIcons .= "| ![Preview](/svg/$type/$id.svg) | `$id`";
+		$alias = $aliasesLookup[$id] ?? null;
+		$aliasStr = $alias === null ? '' : '`' . implode('`, `', $alias) . '`';
 
-		if ($col++ === 3) {
+		$readmeIcons .= "| ![Preview](/svg/$type/$id.svg) | `$id` | $aliasStr";
+
+		if ($col++ === 2) {
 			$readmeIcons .= " |\n";
 			$col = 0;
 		}
@@ -73,7 +81,7 @@ $json = json_encode($icons, JSON_PRETTY_PRINT);
 $json = preg_replace('/\[\s+(\d+),\s+(\d+),\s+(\d+),\s+(\d+),\s+(".*")\s+\]/', '[\1, \2, \3, \4, \5]', $json);
 $count = count($icons);
 
-$js = "var icons = $json\n\n" . file_get_contents('./src/ha-feller-icons-template.js');
+$js = "var icons = $json\nvar aliases = $aliases\n\n" . file_get_contents('./src/ha-feller-icons-template.js');
 $jspath = './dist/ha-feller-icons.js';
 
 if (is_file($jspath))

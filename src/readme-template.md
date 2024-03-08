@@ -12,6 +12,8 @@ Icons are identified by number, so you can for example use `feller:1409` for the
 A list of icons can be found [here](https://webcache.brandmaker.com/314_1685116696676.original.html).
 If the Link doesn't work, you should find the download [here](https://online-katalog.feller.ch/download/index.php?menueidLev1=280).
 
+Since 1.1.0 there are also aliases available, so you can use `feller:lightbulb` as well.
+
 **Note:** This project is not affiliated with Feller the company, but is a community driven effort
 to bring Feller icons to Home Assistant.
 
