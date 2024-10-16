@@ -1,7 +1,7 @@
 #!/usr/local/bin/php
 <?php
 
-$url = 'https://online-katalog.feller.ch/bm/php/bm_artikelXML_V2.php?vp=0';
+$url = 'https://online-katalog.feller.ch/bm/php/bm_artikelXML_V2.php?vp=0&fnr=3401.1.GMI.A.61';
 //$color = 'rgb(255, 255, 255)';
 $color = '#44739e';
 

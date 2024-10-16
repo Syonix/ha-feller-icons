@@ -17,8 +17,9 @@ $types = [
 ];
 
 $aliases = file_get_contents('./src/aliases.json');
+$aliasesArr = json_decode($aliases, true);
 $aliasesLookup = [];
-foreach (json_decode($aliases) as $k => $v)
+foreach ($aliasesArr as $k => $v)
 	$aliasesLookup[$v][] = $k;
 
 $icons = [];
@@ -80,6 +81,7 @@ file_put_contents('README.md', $readme);
 $json = json_encode($icons, JSON_PRETTY_PRINT);
 $json = preg_replace('/\[\s+(\d+),\s+(\d+),\s+(\d+),\s+(\d+),\s+(".*")\s+\]/', '[\1, \2, \3, \4, \5]', $json);
 $count = count($icons);
+$aliascount = count($aliasesArr);
 
 $js = "var icons = $json\nvar aliases = $aliases\n\n" . file_get_contents('./src/ha-feller-icons-template.js');
 $jspath = './dist/ha-feller-icons.js';
@@ -89,6 +91,6 @@ if (is_file($jspath))
 
 file_put_contents($jspath, $js);
 
-echo "✅ Sucessfully updated javascript file with $count icons\n";
+echo "✅ Sucessfully updated javascript file with $count icons with $aliascount aliases.\n";
 
 return 0;

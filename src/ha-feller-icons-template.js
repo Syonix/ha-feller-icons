@@ -15,9 +15,10 @@ async function getIcon(name) {
 }
 
 async function getIconList() {
-    return Object.entries(icons).map(([icon]) => ({
-        name: icon
-    }));
+    var iconList = Object.entries(icons).map(([icon]) => ({name: icon}));
+    var aliasList = Object.keys(aliases).map(icon => ({name: icon}));
+    
+    return iconList.concat(aliasList);
 }
 
 window.customIconsets = window.customIconsets || {};
